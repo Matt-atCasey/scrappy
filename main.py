@@ -7,7 +7,7 @@ from rich.progress import track
 
 
 def scrape_scan():
-    url = "https://www.scan.co.uk/shop/gaming/gpu-nvidia-gaming/geforce-rtx-4090-graphics-cards"
+    url = "https://www.scan.co.uk/shop/gaming/gpu-nvidia-gaming/geforce-rtx-4080-super-graphics-cards"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
     }
@@ -19,22 +19,21 @@ def scrape_scan():
     # # grab every list element in the ul "product-group"
     products = soup.find("ul", class_="product-group").find_all("li")
     for product in products:
-        product_name = product.find("div").find("span", class_="description").text
-        product_price = (
-            product.find("div", class_="priceAvailability")
-            .find("div", class_="priceWishlistBuy")
-            .find("div", class_="leftColumn")
-            .find("span", class_="price")
-            .text.strip()
-        )
+        product_name = product.get("data-description")
+        product_manufacturer = product.get("data-manufacturer")
+        try:
+            product_price = product.get("data-price")
+            if product_price == "999999.00" or product_price == "0":
+                product_price = "Out of stock"
+        except AttributeError:
+            product_price = "0"
+
         product_link = product.find("a")["href"]
-        # get rid of parse weirdness
-        product_price = "".join(
-            part.strip() for part in product_price if part.strip()
-        ).replace("£", "")
 
         # create a new product object
-        new_product = Product(product_name, product_price, product_link)
+        new_product = Product(
+            product_name, product_manufacturer, product_price, product_link
+        )
         # add the new product to the list as json object
         new_products.append(new_product.__dict__)
         print(new_product)
@@ -60,16 +59,19 @@ def check_for_changes(new_products):
     if new_products != existing_products:
         print("Changes detected!")
         # Find products that were added or modified
+        # Convert dictionary items to Product objects
         for product in new_products:
             if product not in existing_products:
                 print(
-                    f"\n[NEW/MODIFIED] {product['name']}\n\tPrice: £{product['price']}"
+                    f"\n[NEW] {product['name']}\n\tPrice: £{product['price']}\n\tLink: https://www.scan.co.uk{product['link']}"
                 )
 
         # Find products that were removed
         for product in existing_products:
             if product not in new_products:
-                print(f"\n[REMOVED] {product['name']}\n\tPrice: £{product['price']}")
+                print(
+                    f"\n[REMOVED] {product['name']}\n\tPrice: £{product['price']}\n\tLink: https://www.scan.co.uk{product['link']}"
+                )
         # write new products to products.json
         with open("products.json", "w") as f:
             json.dump(new_products, f, indent=4)
