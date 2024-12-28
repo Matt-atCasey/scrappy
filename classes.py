@@ -9,6 +9,6 @@ class Product:
         return (
             f"Product: {self.name}\n"
             f"Brand: {self.brand}\n"
-            f"Price: £{self.price}\n"
-            f"Link: https://www.scan.co.uk/{self.link}\n"
+            f"Price: {self.price}\n"
+            f"Link: {self.link}\n"
         )
