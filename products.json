@@ -1,7 +1,7 @@
 [
     {
         "name": "Gigabyte",
-        "price": "989.99",
+        "price": "999.98",
         "link": "https://www.scan.co.uk//products/gigabyte-nvidia-geforce-rtx-4080-super-windforce-v2-16gb-gddr6x-ray-tracing-graphics-card-10240-core",
         "brand": "Gigabyte"
     },
@@ -9,24 +9,6 @@
         "name": "Zotac",
         "price": "999.98",
         "link": "https://www.scan.co.uk//products/zotac-nvidia-geforce-rtx-4080-super-trinity-black-ed-16gb-gddr6x-ray-tracing-graphics-card-10240-cor",
-        "brand": "Zotac"
-    },
-    {
-        "name": "Gigabyte",
-        "price": "1031.99",
-        "link": "https://www.scan.co.uk//products/open-box-gigabyte-nvidia-geforce-rtx-4080-super-windforce-v2-16gb-gddr6x-ray-tracing-graphics-card-1",
-        "brand": "Gigabyte"
-    },
-    {
-        "name": "Gigabyte",
-        "price": "1049.99",
-        "link": "https://www.scan.co.uk//products/gigabyte-nvidia-geforce-rtx-4080-super-gaming-oc-16gb-gddr6x-ray-tracing-graphics-card-10240-core",
-        "brand": "Gigabyte"
-    },
-    {
-        "name": "Zotac",
-        "price": "1049.99",
-        "link": "https://www.scan.co.uk//products/zotac-nvidia-geforce-rtx-4080-super-amp-xgb-gddr6x-ray-tracing-graphics-card-10240-core-2610mhz-boos",
         "brand": "Zotac"
     },
     {
@@ -40,17 +22,5 @@
         "price": "\u00a31,699.99",
         "link": "https://marketplace.nvidia.com/en-gb/consumer/graphics-cards/msi-nvidia-geforce-rtx-4090-gaming-x-slim-24gb-gddr6x-graphics-card/",
         "brand": "MSI"
-    },
-    {
-        "name": "ASUS",
-        "price": "\u00a32,099.99",
-        "link": "https://marketplace.nvidia.com/en-gb/consumer/graphics-cards/asus-nvidia-geforce-rtx-4090-rog-strix-oc-24gb-gddr6x-graphics-card/",
-        "brand": "ASUS"
-    },
-    {
-        "name": "ASUS",
-        "price": "\u00a32,799.98",
-        "link": "https://marketplace.nvidia.com/en-gb/consumer/graphics-cards/asus-nvidia-geforce-rtx-4090-rog-matrix-platinum-24gb-gddr6x-graphics-card/",
-        "brand": "ASUS"
     }
 ]

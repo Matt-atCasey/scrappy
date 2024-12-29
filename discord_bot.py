@@ -1,4 +1,5 @@
 import discord
+import asyncio
 
 
 class DiscordNotifier:
@@ -21,13 +22,15 @@ class DiscordNotifier:
         """
         if not self.client.is_ready():
             print("Client is not ready. Ensure the bot is properly initialized.")
-
             return
 
         channel = self.client.get_channel(self.channel_id)
         if channel:
             try:
-                await channel.send(message)
+                embed = discord.Embed(
+                    title="New Update", description=message, color=discord.Color.blue()
+                )
+                await channel.send(embed=embed)
             except discord.Forbidden:
                 print("Bot does not have permission to send messages to the channel.")
             except discord.HTTPException as e:
@@ -50,17 +53,10 @@ class DiscordNotifier:
         self.client.run(self.token)
 
     def run_with_task(self, task):
-        """
-        Start the bot and run a background task.
-
-        :param task: An asynchronous task to run in the background (e.g., change detection).
-        """
-
         @self.client.event
-        # pylint: disable=unused-variable
         async def on_ready():
             print(f"Bot is ready! Logged in as {self.client.user}")
+            # Call the task coroutine explicitly
             self.client.loop.create_task(task())
 
-        # Run the bot
         self.client.run(self.token)

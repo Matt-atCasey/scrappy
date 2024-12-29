@@ -70,7 +70,6 @@ def scrape_nvidia():
             product_name, product_manufacturer, product_price, product_link
         )
         new_products.append(new_product.__dict__)
-        print(new_product)
     return new_products
 
 
