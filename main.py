@@ -1,5 +1,5 @@
 import json
-import time
+from textwrap import shorten
 from classes import Product
 from rich.progress import Progress, TaskID
 from sites import scrape_scan, scrape_nvidia
@@ -15,76 +15,100 @@ logger = logging.getLogger(__name__)
 
 
 def scrape_all():
-    scan_products = []
-    nvidia_products = []
+    scraped_products = []
 
+    # Define your scrapers here
+    scrapers = [scrape_scan, scrape_nvidia]
+
+    for scraper in scrapers:
+        try:
+            results = scraper()
+            scraped_products.extend(results)
+            logger.info(f"Scraped {len(results)} products with {scraper.__name__}")
+
+        except Exception as e:
+            logger.error(f"Failed to scrape with {scraper.__name__}: {e}")
+
+    # Save results to a JSON file
     try:
-        scan_products = scrape_scan()
+        with open("new_scrape.json", "w") as f:
+            json.dump(scraped_products, f, indent=4)
+        logger.info(f"Scraped products saved to new_scrape.json")
     except Exception as e:
-        logger.error(f"Error scraping Scan: {e}")
+        logger.error(f"Failed to save scraped products to JSON: {e}")
 
-    try:
-        nvidia_products = scrape_nvidia()
-    except Exception as e:
-        logger.error(f"Error scraping Nvidia: {e}")
-
-    # Combine and deduplicate products based on name
-    all_products = scan_products + nvidia_products
-    seen_names = set()
-    unique_products = []
-
-    for product in all_products:
-        if product["name"] not in seen_names:
-            seen_names.add(product["name"])
-            unique_products.append(product)
-
-    return unique_products
+    return scraped_products
 
 
-def check_for_changes(scraped_products):
+def check_for_changes(new_products):
     try:
         with open("products.json", "r") as f:
-            existing_products = json.load(f)
+            try:
+                existing_products = [Product(**p) for p in json.load(f)]
+            except json.JSONDecodeError:
+                existing_products = []
     except FileNotFoundError:
         existing_products = []
 
-    if scraped_products != existing_products:
-        print("Changes detected!")
-        # Convert dictionary items to Product objects
-        scraped_products = [Product(**product) for product in scraped_products]
-        existing_products = [Product(**product) for product in existing_products]
+    new_products = [Product(**p) for p in new_products]
+    logger.info(f"Loaded {len(existing_products)} existing products")
 
-        # Find products that were added or modified
-        added_products = [
-            product for product in scraped_products if product not in existing_products
-        ]
-        modified_products = [
-            product for product in scraped_products if product in existing_products
-        ]
+    # Detect added products
+    added_products = [p for p in new_products if p not in existing_products]
+    logger.info(f"Detected {len(added_products)} new products")
 
-        # Save the new products to products.json
-        with open("products.json", "w") as f:
-            json.dump([product.__dict__ for product in scraped_products], f, indent=4)
+    # Detect modified products (optional, based on your needs)
+    modified_products = [
+        p
+        for p in new_products
+        if p in existing_products and p != existing_products[existing_products.index(p)]
+    ]
+    logger.info(f"Detected {len(modified_products)} modified products")
 
-        return added_products, modified_products
+    # Detect deleted products
+    deleted_products = [p for p in existing_products if p not in new_products]
+    logger.info(f"Detected {len(deleted_products)} deleted products")
 
-    # Return empty lists if no changes are detected
-    return [], []
+    # Save the updated list to products.json
+    with open("products.json", "w") as f:
+        json.dump([p.to_dict() for p in new_products], f, indent=4)
+
+    return added_products, modified_products, deleted_products
 
 
 async def check_changes_and_notify():
+    """
+    Periodically checks for changes in scraped products and sends notifications for added and modified products.
+    """
     while True:
         scraped_products = scrape_all()
-        added, modified = check_for_changes(scraped_products)
+        added, modified, deleted = check_for_changes(scraped_products)
+
+        # Discord message limit (including Markdown and emojis)
+        DISCORD_MESSAGE_LIMIT = 2000
 
         # Send a single notification for all added products
         if added:
             try:
                 added_message = "🆕 **New Products Added!**\n\n"
-                # Sort products by name to ensure consistent order
                 for product in sorted(added, key=lambda x: x.name):
-                    added_message += f"📦 **{product.name}**\n💰 Price: £{product.price}\n🔗 Link: {product.link}\n\n"
-                await notifier.send_notification(added_message)
+                    product_message = (
+                        f"📦 **{product.name}**\n"
+                        f"💰 Price: £{product.price}\n"
+                        f"🔗 [Product Link]({product.link})\n\n"
+                    )
+                    # Ensure message stays within Discord's limit
+                    if (
+                        len(added_message) + len(product_message)
+                        > DISCORD_MESSAGE_LIMIT
+                    ):
+                        await notifier.send_notification(added_message)
+                        added_message = ""  # Start a new message
+                    added_message += product_message
+
+                if added_message:
+                    await notifier.send_notification(added_message)
+
                 logger.info(f"Sent notification for {len(added)} new products")
             except Exception as e:
                 logger.error(f"Failed to send added notification: {e}")
@@ -93,17 +117,33 @@ async def check_changes_and_notify():
         if modified:
             try:
                 modified_message = "🔄 **Products Modified!**\n\n"
-                # Sort products by name to ensure consistent order
                 for product in sorted(modified, key=lambda x: x.name):
-                    modified_message += f"📦 **{product.name}**\n💰 Price: £{product.price}\n🔗 Link: {product.link}\n\n"
-                await notifier.send_notification(modified_message)
+                    product_message = (
+                        f"📦 **{product.name}**\n"
+                        f"💰 Price: £{product.price}\n"
+                        f"🔗 [Product Link]({product.link})\n\n"
+                    )
+                    # Ensure message stays within Discord's limit
+                    if (
+                        len(modified_message) + len(product_message)
+                        > DISCORD_MESSAGE_LIMIT
+                    ):
+                        await notifier.send_notification(modified_message)
+                        modified_message = ""  # Start a new message
+                    modified_message += product_message
+
+                if modified_message:
+                    await notifier.send_notification(modified_message)
+
                 logger.info(f"Sent notification for {len(modified)} modified products")
             except Exception as e:
                 logger.error(f"Failed to send modified notification: {e}")
 
         # Random delay between checks
-        delay = random.randint(10, 20)
-        logger.info(f"Waiting {delay} seconds before next check...")
+        delay = random.randint(20, 40)
+        logger.info(f"Waiting {delay} seconds before the next check...")
+
+        # Visual progress bar during delay
         with Progress() as progress:
             task = progress.add_task("[cyan]Waiting for next check...", total=delay)
             for _ in range(delay):
@@ -120,4 +160,6 @@ if __name__ == "__main__":
         raise ValueError("Missing DISCORD_TOKEN or DISCORD_CHANNEL_ID in .env file")
 
     notifier = DiscordNotifier(token, int(channel_id))
+    # new_scrape = scrape_all()
+    # check_for_changes(new_scrape)
     notifier.run_with_task(check_changes_and_notify)

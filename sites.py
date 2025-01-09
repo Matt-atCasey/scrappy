@@ -1,6 +1,5 @@
 import httpx
 from bs4 import BeautifulSoup
-import requests
 from classes import Product
 import json
 
@@ -8,6 +7,8 @@ import json
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
 }
+
+# ** Pls return scrapes with a dictionary and then create a Product object from the dictionary in main.py :)
 
 
 def scrape_scan():
@@ -17,7 +18,7 @@ def scrape_scan():
 
     new_products = []
 
-    # # grab every list element in the ul "product-group"
+    # Grab every list element in the ul "product-group"
     products = soup.find("ul", class_="product-group").find_all("li")
     for product in products:
         product_name = product.get("data-description")
@@ -31,26 +32,21 @@ def scrape_scan():
 
         product_link = "https://www.scan.co.uk/" + product.find("a")["href"]
 
-        # create a new product object
-        new_product = Product(
-            product_name, product_manufacturer, product_price, product_link
+        # Return as a dictionary
+        new_products.append(
+            {
+                "name": product_name,
+                "brand": product_manufacturer,
+                "price": product_price,
+                "link": product_link,
+            }
         )
-        # add the new product to the list as json object
-        new_products.append(new_product.__dict__)
-        print(new_product)
+
     return new_products
 
 
+# NOT WORKING :(
 def scrape_nvidia():
-    # url = "https://api.nvidia.partners/edge/product/search?locale=en-gb&page=1&limit=12&gpu=RTX%204090&gpu_filter=RTX%204090&category=GPU"
-    # cookies = "bm_sv=6AEC9321DD7DD295341B4CF471488C68~YAAQruQWAhQHltuTAQAAuiM3ChqrrXmiXOVd34s9HwARy/ZQtPUBVErn5027/32erXUoh0XiNZ4PbGp/LGkBCSIuHPTVs35FgpofXrB2tv3JuCncMOFdA03ZTvuBFZtsd5xHUn8w9O3PI+sxoNeixX+3xkz2HlLa7zcsAxyvRjcBFzn+UXdvVh+ZRiPJwFj6pdnvKstyxrYNEdQh72t8Nmx6FHjQ8Ir1OjzzdIFsAHQmq1ZaJkqInbSNBnrW/SE9~1"
-    # headers = {
-    #     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
-    #     "Set-Cookie": cookies,
-    # }
-    # response = requests.get(url, headers=headers)
-    # data = response.json()
-    # print(data)
 
     # imported json file for testing
     with open("nvidia_test.json", "r") as f:
@@ -71,6 +67,3 @@ def scrape_nvidia():
         )
         new_products.append(new_product.__dict__)
     return new_products
-
-
-scrape_nvidia()
