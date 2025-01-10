@@ -94,7 +94,7 @@ async def check_changes_and_notify():
                 for product in sorted(added, key=lambda x: x.name):
                     product_message = (
                         f"📦 **{product.name}**\n"
-                        f"💰 Price: £{product.price}\n"
+                        f"💰 Price: {product.price}\n"
                         f"🔗 [Product Link]({product.link})\n\n"
                     )
                     # Ensure message stays within Discord's limit
@@ -140,7 +140,7 @@ async def check_changes_and_notify():
                 logger.error(f"Failed to send modified notification: {e}")
 
         # Random delay between checks
-        delay = random.randint(20, 40)
+        delay = random.randint(60, 300)
         logger.info(f"Waiting {delay} seconds before the next check...")
 
         # Visual progress bar during delay

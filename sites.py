@@ -12,7 +12,7 @@ headers = {
 
 
 def scrape_scan():
-    url = "https://www.scan.co.uk/shop/gaming/gpu-nvidia-gaming/geforce-rtx-4080-super-graphics-cards"
+    url = "https://www.scan.co.uk/shop/gaming/gpu-nvidia-gaming/geforce-rtx-5080-graphics-cards"
     page = httpx.get(url, headers=headers)
     soup = BeautifulSoup(page.content, "html.parser")
 
