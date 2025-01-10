@@ -7,5 +7,6 @@ wheels/
 *.egg-info
 .env
 *.json
+products.json
 # Virtual environments
 .venv
