@@ -22,11 +22,19 @@ class Product:
         )
 
     def __eq__(self, other):
-        if not isinstance(other, Product):
-            return False
-        # Compare by a unique identifier, e.g., the link
-        return self.link == other.link
+        if isinstance(other, Product):
+            return self.name == other.name and self.brand == other.brand
+        return False
 
-    def __hash__(self):
-        # Use the link as the unique hashable attribute
-        return hash(self.link)
+    def compare(self, other):
+        """
+        Compare this product with another and return a dictionary of changed fields.
+        :param other: Product to compare with.
+        :return: Dict with field names as keys and (old_value, new_value) as values.
+        """
+        changes = {}
+        if self.price != other.price:
+            changes["price"] = (other.price, self.price)
+        if self.link != other.link:
+            changes["link"] = (other.link, self.link)
+        return changes

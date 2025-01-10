@@ -18,7 +18,7 @@ def scrape_all():
     scraped_products = []
 
     # Define your scrapers here
-    scrapers = [scrape_scan, scrape_nvidia]
+    scrapers = [scrape_scan]
 
     for scraper in scrapers:
         try:
@@ -57,17 +57,19 @@ def check_for_changes(new_products):
     added_products = [p for p in new_products if p not in existing_products]
     logger.info(f"Detected {len(added_products)} new products")
 
-    # Detect modified products (optional, based on your needs)
-    modified_products = [
-        p
-        for p in new_products
-        if p in existing_products and p != existing_products[existing_products.index(p)]
-    ]
-    logger.info(f"Detected {len(modified_products)} modified products")
+    # Detect modified products
+    modified_products = []
+    for new_product in new_products:
+        for old_product in existing_products:
+            if new_product.name == old_product.name:  # Match by name
+                changes = new_product.compare(old_product)
+                if changes:
+                    modified_products.append((new_product, changes))
 
     # Detect deleted products
-    deleted_products = [p for p in existing_products if p not in new_products]
-    logger.info(f"Detected {len(deleted_products)} deleted products")
+    deleted_products = [
+        product for product in existing_products if product not in new_products
+    ]
 
     # Save the updated list to products.json
     with open("products.json", "w") as f:
@@ -94,7 +96,7 @@ async def check_changes_and_notify():
                 for product in sorted(added, key=lambda x: x.name):
                     product_message = (
                         f"📦 **{product.name}**\n"
-                        f"💰 Price: £{product.price}\n"
+                        f"💰 Price: {product.price}\n"
                         f"🔗 [Product Link]({product.link})\n\n"
                     )
                     # Ensure message stays within Discord's limit
@@ -117,20 +119,15 @@ async def check_changes_and_notify():
         if modified:
             try:
                 modified_message = "🔄 **Products Modified!**\n\n"
-                for product in sorted(modified, key=lambda x: x.name):
-                    product_message = (
-                        f"📦 **{product.name}**\n"
-                        f"💰 Price: £{product.price}\n"
-                        f"🔗 [Product Link]({product.link})\n\n"
-                    )
+                for product, changes in modified:
+                    modified_message += f"📦 **{product.name}**\n"
+                    for field, (old, new) in changes.items():
+                        modified_message += f"🔹 {field.capitalize()}: {old} ➡️ {new}\n"
+                    modified_message += f"🔗 [Product Link]({product.link})\n\n"
                     # Ensure message stays within Discord's limit
-                    if (
-                        len(modified_message) + len(product_message)
-                        > DISCORD_MESSAGE_LIMIT
-                    ):
+                    if len(modified_message) > DISCORD_MESSAGE_LIMIT:
                         await notifier.send_notification(modified_message)
                         modified_message = ""  # Start a new message
-                    modified_message += product_message
 
                 if modified_message:
                     await notifier.send_notification(modified_message)
@@ -139,8 +136,19 @@ async def check_changes_and_notify():
             except Exception as e:
                 logger.error(f"Failed to send modified notification: {e}")
 
+        # Send a single notification for all deleted products
+        if deleted:
+            deleted_message = "🗑️ **Products Removed!**\n\n"
+            for product in deleted:
+                deleted_message += f"📦 **{product.name}**\n"
+                deleted_message += f"💰 Price: {product.price}\n"
+                # Ensure message stays within Discord's limit
+                if len(deleted_message) > DISCORD_MESSAGE_LIMIT:
+                    await notifier.send_notification(deleted_message)
+                    deleted_message = ""
+
         # Random delay between checks
-        delay = random.randint(20, 40)
+        delay = random.randint(60, 300)
         logger.info(f"Waiting {delay} seconds before the next check...")
 
         # Visual progress bar during delay
