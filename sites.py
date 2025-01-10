@@ -2,47 +2,81 @@ import httpx
 from bs4 import BeautifulSoup
 from classes import Product
 import json
+from rich import print as rprint
 
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
 }
 
+
 # ** Pls return scrapes with a dictionary and then create a Product object from the dictionary in main.py :)
-
-
 def scrape_scan():
-    url = "https://www.scan.co.uk/shop/gaming/gpu-nvidia-gaming/geforce-rtx-5080-graphics-cards"
-    page = httpx.get(url, headers=headers)
-    soup = BeautifulSoup(page.content, "html.parser")
+    scan_urls = [
+        "https://www.scan.co.uk/shop/computer-hardware/gpu-nvidia-gaming/geforce-rtx-5070-graphics-cards",
+        "https://www.scan.co.uk/shop/computer-hardware/gpu-nvidia-gaming/geforce-rtx-5080-graphics-cards",
+        "https://www.scan.co.uk/shop/computer-hardware/gpu-nvidia-gaming/geforce-rtx-5090-graphics-cards",
+    ]
 
-    new_products = []
+    all_products = []
 
-    # Grab every list element in the ul "product-group"
-    products = soup.find("ul", class_="product-group").find_all("li")
-    for product in products:
-        product_name = product.get("data-description")
-        product_manufacturer = product.get("data-manufacturer")
+    for url in scan_urls:
         try:
-            product_price = product.get("data-price")
+            page = httpx.get(url, headers={"User-Agent": "Mozilla/5.0"})
+            page.raise_for_status()  # Raise an HTTPError for bad responses
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                rprint(f"[red]URL not found (404): {url}[/red]")
+            elif e.response.status_code == 403:
+                rprint(f"[orange]Access forbidden (403): {url}[/orange]")
+            else:
+                rprint(
+                    f"[red]HTTP error occurred for {url}: {e.response.status_code}[/red]"
+                )
+            continue
+        except httpx.RequestError as e:
+            rprint(f"[red]Network error occurred: {e}[/red]")
+            continue
+
+        soup = BeautifulSoup(page.content, "html.parser")
+
+        # Find the product group list
+        product_group = soup.find("ul", class_="product-group")
+        if not product_group:
+            rprint(f"[yellow]No products found on page: {url}[/yellow]")
+            continue
+
+        products = product_group.find_all("li")
+        new_products = []
+
+        for product in products:
+            product_name = product.get("data-description")
+            product_manufacturer = product.get("data-manufacturer")
+            product_price = product.get("data-price") or "0"
+
+            # Handle special price cases
             if product_price == "999999.00" or product_price == "0":
                 product_price = "Out of stock"
-        except AttributeError:
-            product_price = "0"
 
-        product_link = "https://www.scan.co.uk/" + product.find("a")["href"]
+            product_link = "https://www.scan.co.uk/" + product.find("a")["href"]
 
-        # Return as a dictionary
-        new_products.append(
-            {
-                "name": product_name,
-                "brand": product_manufacturer,
-                "price": product_price,
-                "link": product_link,
-            }
-        )
+            # Append as dictionary
+            new_products.append(
+                {
+                    "name": product_name.strip() if product_name else "Unknown",
+                    "brand": (
+                        product_manufacturer.strip()
+                        if product_manufacturer
+                        else "Unknown"
+                    ),
+                    "price": product_price.strip(),
+                    "link": product_link.strip(),
+                }
+            )
 
-    return new_products
+        all_products.extend(new_products)
+
+    return all_products
 
 
 # NOT WORKING :(
