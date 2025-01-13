@@ -2,7 +2,8 @@ import json
 from textwrap import shorten
 from classes import Product
 from rich.progress import Progress, TaskID
-from sites import scrape_scan, scrape_nvidia
+from sites.nvidia import scrape_nvidia
+from sites.scan import scrape_scan
 from discord_bot import DiscordNotifier
 from dotenv import load_dotenv
 import asyncio
@@ -18,7 +19,7 @@ def scrape_all():
     scraped_products = []
 
     # Define your scrapers here
-    scrapers = [scrape_scan]
+    scrapers = [scrape_nvidia, scrape_scan]
 
     for scraper in scrapers:
         try:
@@ -95,9 +96,11 @@ async def check_changes_and_notify():
                 added_message = "🆕 **New Products Added!**\n\n"
                 for product in sorted(added, key=lambda x: x.name):
                     product_message = (
-                        f"📦 **{product.name}**\n"
-                        f"💰 Price: {product.price}\n"
-                        f"🔗 [Product Link]({product.link})\n\n"
+                        f"🎁 **{product.name}**\n"
+                        f"💸 Price: {product.price}\n"
+                        f"🌐 [Product Link]({product.link})\n"
+                        f"🌐 [In-stock?]({product.in_stock})\n"
+                        f"🏪 Site: {product.site })\n"
                     )
                     # Ensure message stays within Discord's limit
                     if (
@@ -122,8 +125,10 @@ async def check_changes_and_notify():
                 for product, changes in modified:
                     modified_message += f"📦 **{product.name}**\n"
                     for field, (old, new) in changes.items():
-                        modified_message += f"🔹 {field.capitalize()}: {old} ➡️ {new}\n"
-                    modified_message += f"🔗 [Product Link]({product.link})\n\n"
+                        modified_message += f"💫 {field.capitalize()}: {old} ➡️ {new}\n"
+                    modified_message += f"🔗 [Product Link]({product.link})\n"
+                    modified_message += f"🔗 [In-stock?]({product.in_stock})\n"
+                    modified_message += f"🏪 Site: {product.site })\n"
                     # Ensure message stays within Discord's limit
                     if len(modified_message) > DISCORD_MESSAGE_LIMIT:
                         await notifier.send_notification(modified_message)
@@ -140,8 +145,9 @@ async def check_changes_and_notify():
         if deleted:
             deleted_message = "🗑️ **Products Removed!**\n\n"
             for product in deleted:
-                deleted_message += f"📦 **{product.name}**\n"
-                deleted_message += f"💰 Price: {product.price}\n"
+                deleted_message += f"🎁 **{product.name}**\n"
+                deleted_message += f"💸 Price: {product.price}\n"
+                deleted_message += f"🏪 Site: {product.site })\n"
                 # Ensure message stays within Discord's limit
                 if len(deleted_message) > DISCORD_MESSAGE_LIMIT:
                     await notifier.send_notification(deleted_message)

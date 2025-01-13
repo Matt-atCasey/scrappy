@@ -1,9 +1,11 @@
 class Product:
-    def __init__(self, name, brand, price, link):
+    def __init__(self, name, brand, price, link, site, in_stock=True):
         self.name = name
         self.price = price
         self.link = link
         self.brand = brand
+        self.in_stock = in_stock
+        self.site = site
 
     def to_dict(self):
         return {
@@ -11,6 +13,8 @@ class Product:
             "brand": self.brand,
             "price": self.price,
             "link": self.link,
+            "in_stock": self.in_stock,
+            "site": self.site,
         }
 
     def __str__(self):
@@ -19,6 +23,8 @@ class Product:
             f"Brand: {self.brand}\n"
             f"Price: {self.price}\n"
             f"Link: {self.link}\n"
+            f"In Stock: {self.in_stock}"
+            f"Site: {self.site}"
         )
 
     def __eq__(self, other):
