@@ -5,12 +5,12 @@ from curl_cffi import requests
 
 def scrape_scan():
     scan_urls = [
-        "https://www.scan.co.uk/shop/computer-hardware/gpu-nvidia-gaming/geforce-rtx-5070-graphics-cards",
-        "https://www.scan.co.uk/shop/computer-hardware/gpu-nvidia-gaming/geforce-rtx-5080-graphics-cards",
-        "https://www.scan.co.uk/shop/computer-hardware/gpu-nvidia-gaming/geforce-rtx-5090-graphics-cards",
+        "https://www.scan.co.uk/shop/gaming/gpu-nvidia-gaming/4041/4039/4036/4040",
     ]
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+        "Accept": "application/json",
+        "Referer": "https://www.scan.co.uk/",
     }
     all_products = []
 
@@ -61,7 +61,7 @@ def scrape_scan():
                         if product_manufacturer
                         else "Unknown"
                     ),
-                    "price": product_price.strip(),
+                    "price": product_price.strip() if product_price else "Unknown",
                     "link": product_link.strip(),
                     "in_stock": in_stock,
                     "site": "Scan",

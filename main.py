@@ -21,7 +21,7 @@ def scrape_all():
     scraped_products = []
 
     # Define your scrapers here
-    scrapers = [scrape_overclockers, scrape_nvidia, scrape_ebuyer]
+    scrapers = [scrape_overclockers, scrape_nvidia, scrape_ebuyer, scrape_scan]
 
     for scraper in scrapers:
         try:
