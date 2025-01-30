@@ -3,7 +3,9 @@ from textwrap import shorten
 from classes import Product
 from rich.progress import Progress, TaskID
 from sites.nvidia import scrape_nvidia
+from sites.overclockers import scrape_overclockers
 from sites.scan import scrape_scan
+from sites.ebuyer import scrape_ebuyer
 from discord_bot import DiscordNotifier
 from dotenv import load_dotenv
 import asyncio
@@ -19,7 +21,7 @@ def scrape_all():
     scraped_products = []
 
     # Define your scrapers here
-    scrapers = [scrape_nvidia, scrape_scan]
+    scrapers = [scrape_overclockers, scrape_nvidia, scrape_ebuyer]
 
     for scraper in scrapers:
         try:
@@ -98,8 +100,8 @@ async def check_changes_and_notify():
                     product_message = (
                         f"🎁 **{product.name}**\n"
                         f"💸 Price: {product.price}\n"
-                        f"🌐 [Product Link]({product.link})\n"
-                        f"🌐 [In-stock?]({product.in_stock})\n"
+                        f"🌐 Product Link: ({product.link})\n"
+                        f"In-stock: {'✅' if product.in_stock else '❌'}\n"
                         f"🏪 Site: {product.site })\n"
                     )
                     # Ensure message stays within Discord's limit

@@ -1,6 +1,6 @@
 import logging
 from bs4 import BeautifulSoup
-import httpx
+from curl_cffi import requests
 
 
 def scrape_scan():
@@ -9,33 +9,28 @@ def scrape_scan():
         "https://www.scan.co.uk/shop/computer-hardware/gpu-nvidia-gaming/geforce-rtx-5080-graphics-cards",
         "https://www.scan.co.uk/shop/computer-hardware/gpu-nvidia-gaming/geforce-rtx-5090-graphics-cards",
     ]
-
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+    }
     all_products = []
 
     for url in scan_urls:
         try:
-            page = httpx.get(
-                url,
-                headers={
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
-                },
-            )
-            page.raise_for_status()  # Raise an HTTPError for bad responses
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 404:
+            response = requests.get(url, headers=headers, impersonate="chrome")
+            response.raise_for_status()  # Raise an HTTPError for bad responses
+        except requests.errors.RequestsError as e:
+            if response.status_code == 404:
                 logging.error(f"URL not found (404): {url}")
-            elif e.response.status_code == 403:
+            elif response.status_code == 403:
                 logging.warning(f"Access forbidden (403): {url}")
             else:
-                logging.error(
-                    f"HTTP error occurred for {url}: {e.response.status_code}"
-                )
+                logging.error(f"HTTP error occurred for {url}: {response.status_code}")
             continue
-        except httpx.RequestError as e:
+        except Exception as e:
             logging.error(f"Network error occurred: {e}")
             continue
 
-        soup = BeautifulSoup(page.content, "html.parser")
+        soup = BeautifulSoup(response.content, "html.parser")
 
         # Find the product group list
         product_group = soup.find("ul", class_="product-group")

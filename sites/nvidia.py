@@ -14,7 +14,7 @@ def scrape_nvidia():
     }
 
     urls = [
-        "https://api.nvidia.partners/edge/product/search?locale=en-gb&page=1&limit=12&gpu=RTX%204090&gpu_filter=RTX%205080&category=GPU"
+        "https://api.nvidia.partners/edge/product/search?page=1&limit=999&locale=en-gb&gpu=RTX%205060,RTX%205060%20Ti,RTX%205070,RTX%205070%20SUPER,RTX%205070%20Ti,RTX%205070%20Ti%20SUPER,RTX%205080,RTX%205080%20SUPER,RTX%205090&gpu_filter=RTX%205090~16,RTX%205080%20SUPER~16,RTX%205080~3,RTX%205070%20Ti%20SUPER~21,RTX%205070%20Ti~23,RTX%205070%20SUPER~21,RTX%205070~20,RTX%205060%20Ti~27,RTX%205060~21&category=GPU"
     ]
     logger.info("Fetching data from NVIDIA API...")
     # Perform the API request

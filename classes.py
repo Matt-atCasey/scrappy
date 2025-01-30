@@ -1,5 +1,5 @@
 class Product:
-    def __init__(self, name, brand, price, link, site, in_stock=True):
+    def __init__(self, name, price, link, brand=None, in_stock=False, site=None):
         self.name = name
         self.price = price
         self.link = link
