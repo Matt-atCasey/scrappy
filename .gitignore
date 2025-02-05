@@ -9,3 +9,5 @@ wheels/
 *.json
 # Virtual environments
 .venv
+products.json
+test.py

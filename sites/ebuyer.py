@@ -9,8 +9,6 @@ logger = logging.getLogger(__name__)
 
 def scrape_ebuyer():
     urls = [
-        "https://www.ebuyer.com/store/Components/cat/Graphics-Cards-Nvidia/subcat/GeForce-RTX-5070-Ti",
-        "https://www.ebuyer.com/store/Components/cat/Graphics-Cards-Nvidia/subcat/GeForce-RTX-5080",
         "https://www.ebuyer.com/store/Components/cat/Graphics-Cards-Nvidia/subcat/GeForce-RTX-5090",
     ]
     # ? urls = [

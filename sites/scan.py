@@ -5,7 +5,7 @@ from curl_cffi import requests
 
 def scrape_scan():
     scan_urls = [
-        "https://www.scan.co.uk/shop/gaming/gpu-nvidia-gaming/4041/4039/4036/4040",
+        "https://www.scan.co.uk/shop/gaming/gpu-nvidia-gaming/geforce-rtx-5090-graphics-cards",
     ]
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",

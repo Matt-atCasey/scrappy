@@ -89,20 +89,20 @@ async def check_changes_and_notify():
         scraped_products = scrape_all()
         added, modified, deleted = check_for_changes(scraped_products)
 
-        # Discord message limit (including Markdown and emojis)
         DISCORD_MESSAGE_LIMIT = 2000
 
-        # Send a single notification for all added products
-        if added:
+        # Only send notifications if at least one added product is in stock
+        in_stock_products = [p for p in added if p.in_stock]
+
+        if in_stock_products:
             try:
                 added_message = "🆕 **New Products Added!**\n\n"
-                for product in sorted(added, key=lambda x: x.name):
+                for product in sorted(in_stock_products, key=lambda x: x.name):
                     product_message = (
                         f"🎁 **{product.name}**\n"
                         f"💸 Price: {product.price}\n"
-                        f"🌐 Product Link: ({product.link})\n"
-                        f"In-stock: {'✅' if product.in_stock else '❌'}\n"
-                        f"🏪 Site: {product.site })\n"
+                        f"🌐 Product Link: {product.link}\n"
+                        f"🏪 Site: {product.site}\n\n"
                     )
                     # Ensure message stays within Discord's limit
                     if (
@@ -110,56 +110,58 @@ async def check_changes_and_notify():
                         > DISCORD_MESSAGE_LIMIT
                     ):
                         await notifier.send_notification(added_message)
-                        added_message = ""  # Start a new message
-                    added_message += product_message
+                        added_message = product_message  # Start a new message
+                    else:
+                        added_message += product_message
 
-                if added_message:
+                    logger.info(f"Product {product.name} is in stock")
+
+                if added_message.strip():
                     await notifier.send_notification(added_message)
+                    logger.info(
+                        f"Sent notification for {len(in_stock_products)} new products"
+                    )
 
-                logger.info(f"Sent notification for {len(added)} new products")
             except Exception as e:
                 logger.error(f"Failed to send added notification: {e}")
+
+        else:
+            logger.info("No new in-stock items, skipping notification.")
 
         # Send a single notification for all modified products
         if modified:
             try:
                 modified_message = "🔄 **Products Modified!**\n\n"
                 for product, changes in modified:
-                    modified_message += f"📦 **{product.name}**\n"
+                    product_message = f"📦 **{product.name}**\n"
                     for field, (old, new) in changes.items():
-                        modified_message += f"💫 {field.capitalize()}: {old} ➡️ {new}\n"
-                    modified_message += f"🔗 [Product Link]({product.link})\n"
-                    modified_message += f"🔗 [In-stock?]({product.in_stock})\n"
-                    modified_message += f"🏪 Site: {product.site })\n"
+                        product_message += f"💫 {field.capitalize()}: {old} ➡️ {new}\n"
+                    product_message += f"🔗 [Product Link]({product.link})\n"
+                    product_message += (
+                        f"In-stock: {'✅' if product.in_stock else '❌'}\n"
+                    )
+                    product_message += f"🏪 Site: {product.site}\n\n"
+
                     # Ensure message stays within Discord's limit
-                    if len(modified_message) > DISCORD_MESSAGE_LIMIT:
+                    if (
+                        len(modified_message) + len(product_message)
+                        > DISCORD_MESSAGE_LIMIT
+                    ):
                         await notifier.send_notification(modified_message)
-                        modified_message = ""  # Start a new message
+                        modified_message = product_message  # Start a new message
+                    else:
+                        modified_message += product_message
 
                 if modified_message:
                     await notifier.send_notification(modified_message)
-
                 logger.info(f"Sent notification for {len(modified)} modified products")
+
             except Exception as e:
                 logger.error(f"Failed to send modified notification: {e}")
 
-        # Send a single notification for all deleted products
-        if deleted:
-            deleted_message = "🗑️ **Products Removed!**\n\n"
-            for product in deleted:
-                deleted_message += f"🎁 **{product.name}**\n"
-                deleted_message += f"💸 Price: {product.price}\n"
-                deleted_message += f"🏪 Site: {product.site })\n"
-                # Ensure message stays within Discord's limit
-                if len(deleted_message) > DISCORD_MESSAGE_LIMIT:
-                    await notifier.send_notification(deleted_message)
-                    deleted_message = ""
-
-        # Random delay between checks
-        delay = random.randint(60, 300)
+        # Random delay before the next check
+        delay = random.randint(30, 60)
         logger.info(f"Waiting {delay} seconds before the next check...")
-
-        # Visual progress bar during delay
         with Progress() as progress:
             task = progress.add_task("[cyan]Waiting for next check...", total=delay)
             for _ in range(delay):

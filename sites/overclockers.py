@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 def scrape_overclockers():
     urls = [
-        "https://www.overclockers.co.uk/pc-components?pim_gpu_family_series%5B0%5D=RTX+50+Series"
+        "https://www.overclockers.co.uk/pc-components/graphics-cards/nvidia-graphics-cards/nvidia-geforce-rtx-5090-graphics-cards"
     ]
     # ? urls = [
     # ?     "https://www.ebuyer.com/store/Components/cat/Graphics-Cards-Nvidia/subcat/GeForce-RTX-4060"
